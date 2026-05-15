@@ -34,10 +34,10 @@ val bonusDescriptionFull as string = "Copper weapons deal " + ((flatWeaponBonus 
 val material as string = "Copper";
 
 // Ice and Fire Armor
-val head as string = "iceandfire:armor_copper_metal_helmet";
-val chest as string = "iceandfire:armor_copper_metal_chestplate";
-val legs as string = "iceandfire:armor_copper_metal_leggings";
-val feet as string = "iceandfire:armor_copper_metal_boots";
+val head as string = "deeperdepths:copper_helmet";
+val chest as string = "deeperdepths:copper_chestplate";
+val legs as string = "deeperdepths:copper_leggings";
+val feet as string = "deeperdepths:copper_boots";
 
 // Ice and Fire + Spartan Weaponry
 val weapons as string[] = [
