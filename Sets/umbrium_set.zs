@@ -20,7 +20,6 @@ val executionBonusDamage as double = 0.50; // 50% Bonus Damage
 
 // Full Set (4/4 + Weapon) - Impending Doom
 val damageToStackMultiplier as double = 1.0; // 1 Damage = 1 Stack
-// CHANGED: Declared as double to prevent JVM VerifyError
 val doomExplosionMultiplier as double = 0.50; 
 val doomDelayTicks as int = 60; // 3 Seconds without taking damage to trigger the explosion
 
@@ -42,7 +41,6 @@ val feet as string = "defiledlands:umbrium_boots";
 val weapons as string[] = [
     "defiledlands:umbrium_sword",
     "defiledlands:umbrium_axe",
-    "defiledlands:umbrium_hoe",
     "spartandefiled:dagger_umbrium",
     "spartandefiled:longsword_umbrium",
     "spartandefiled:katana_umbrium",
