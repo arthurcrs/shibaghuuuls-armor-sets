@@ -10,19 +10,20 @@ import crafttweaker.event.EntityLivingHurtEvent;
 // ==========================================
 
 // Partial Set (2/4)
-val alternatingTargetBonus as double = 0.20; // +20% damage on new target
+val alternatingTargetBonus as double = 0.20; // +20% damage
 val lastTargetMarkId as string = "ruby_last_target";
+val lastTargetMemorySeconds as int = 30;
 
 // Full Set (4/4 + Weapon)
 val splashDamagePercentage as double = 0.30; // 30% of main hit damage
 val recentTargetMarkId as string = "ruby_recent_targets";
-val recentTargetDurationTicks as int = 100;  // Enemies remember the hit for 5 seconds
+val recentTargetDurationSeconds as int = 5; 
 
 // ==========================================
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "Deal " + ((alternatingTargetBonus * 100.0) as int) + "% bonus damage when attacking a new target. Bonus is lost if attacking the same enemy consecutively.";
+val bonusDescriptionPartial as string = "Deal " + ((alternatingTargetBonus * 100.0) as int) + "% bonus damage when attacking a new target. This bonus is lost if attacking the same enemy consecutively.";
 
 val bonusDescriptionFull as string = "Ruby weapons deal " + ((splashDamagePercentage * 100.0) as int) + "% of your damage to all other enemies you have recently attacked.";
 
@@ -73,16 +74,11 @@ SB.addEquipToSet(armorSetName, "chest", chest);
 SB.addEquipToSet(armorSetName, "legs", legs);
 SB.addEquipToSet(armorSetName, "feet", feet);
 
-// Register weapons to their own set
 SB.addEquipToSet(weaponSetName, "mainhand", weapons);
 
-// 2 pieces of armor for partial bonus
 SB.addSetReqToBonus(armorBonusNamePartial, bonusDescriptionPartial, armorSetName, 2);
-
-// 4 pieces of armor for full bonus description display
 SB.addSetReqToBonus(armorBonusNameFull, bonusDescriptionFull, armorSetName, 4);
 
-// Intersection requirement: 4 armor + 1 weapon for the actual splash proc
 SB.addSetReqToBonus(weaponBonusName, "", armorSetName, 4, 2);
 SB.addSetReqToBonus(weaponBonusName, "", weaponSetName, -1, 2);
 
@@ -93,8 +89,6 @@ SB.addSetReqToBonus(weaponBonusName, "", weaponSetName, -1, 2);
 events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
     val damageSource as IDamageSource = event.damageSource;
     
-    // INFINITE LOOP PREVENTION: 
-    // If this damage was caused by our own set bonus splash, immediately stop.
     if (damageSource.damageType == "ruby_splash") {
         return;
     }
@@ -106,42 +100,38 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         return;
     }
     
+    // ---------------------------------------------------------
     // ATTACKER LOGIC
+    // ---------------------------------------------------------
     if (!isNull(attackerEntity)) {
         if (attackerEntity instanceof IPlayer) {
             val attacker as IPlayer = attackerEntity.asIPlayer();
             
             if (!isNull(attacker)) {
                 
-                // ---------------------------------------------------------
-                // Partial Set (2/4) - Alternating Target Bonus
-                // ---------------------------------------------------------
+                // --- Partial Set (2/4) ---
                 if (attacker.hasSetBonus(armorBonusNamePartial) == true) {
                     
                     if (attacker.isMarked(lastTargetMarkId, targetEntity) == false) {
-                        attacker.debugMessage(material + " Armor: New target detected! Applying bonus damage.");
                         event.amount = event.amount * (1.0 + alternatingTargetBonus);
+                        attacker.debugMessage(material + " Armor: +" + ((alternatingTargetBonus * 100.0) as int) + "% damage applied.");
                     } else {
-                        attacker.debugMessage(material + " Armor: Same target attacked. No bonus.");
+                        attacker.debugMessage(material + " Armor: 0% bonus damage applied.");
                     }
 
-                    // Clear the old mark and immediately mark this entity as the new "last target"
                     attacker.clearMarks(lastTargetMarkId);
-                    attacker.markEntity(lastTargetMarkId, targetEntity, 600, "overwrite");
+                    attacker.markEntity(lastTargetMarkId, targetEntity, lastTargetMemorySeconds * 20, "overwrite");
                 }
                 
-                // ---------------------------------------------------------
-                // Full Set (4/4 + Weapon) - Recent Target Splash Damage
-                // ---------------------------------------------------------
+                // --- Full Set (4/4 + Weapon) ---
                 if (attacker.hasSetBonus(weaponBonusName) == true) {
                     
                     val splashAmount = event.amount * splashDamagePercentage;
                     val recentTargets = attacker.getMarkedEntities(recentTargetMarkId);
                     
-                    // NESTED IF BLOCKS TO PREVENT BYTECODE CORRUPTION
                     if (!isNull(recentTargets)) {
                         if (recentTargets.length > 0) {
-                            attacker.debugMessage(material + " Weapon: Splashing " + splashAmount + " damage to " + recentTargets.length + " recent targets.");
+                            attacker.debugMessage(material + " Weapon: Splashing " + splashAmount + " damage to " + recentTargets.length + " targets.");
                             
                             for enemy in recentTargets {
                                 if (!isNull(enemy)) {
@@ -158,8 +148,7 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
                         }
                     }
                     
-                    // Mark the current target so they get splashed on the next swing against someone else
-                    attacker.markEntity(recentTargetMarkId, targetEntity, recentTargetDurationTicks, "add");
+                    attacker.markEntity(recentTargetMarkId, targetEntity, recentTargetDurationSeconds * 20, "add");
                 }
             }
         }

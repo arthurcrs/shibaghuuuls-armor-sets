@@ -9,15 +9,14 @@ import crafttweaker.event.EntityLivingHurtEvent;
 // BALANCING
 // ==========================================
 
-// Partial Set (2/4) - Target Effect Damage Scaling
+// Partial Set (2/4)
 val damageBonusPerEffect as double = 0.05;
 
-// Full Set (4/4) - Random Target Debuffs
+// Full Set (4/4 + Weapon)
 val debuffProcChance as double = 0.25;
-val debuffDurationTicks as int = 100;
+val debuffDurationSeconds as int = 5;
 val debuffAmplifier as int = 0; // Level 1 (0 = I, 1 = II)
 
-// The pool of possible debuffs (Vanilla + Potion Core)
 val malachiteDebuffs as string[] = [
     "minecraft:slowness",
     "minecraft:mining_fatigue",
@@ -45,7 +44,7 @@ val malachiteDebuffs as string[] = [
 
 val bonusDescriptionPartial as string = "Deal " + ((damageBonusPerEffect * 100.0) as int) + "% bonus damage for every active potion effect on your target.";
 
-val bonusDescriptionFull as string = "Malachite weapons have a " + ((debuffProcChance * 100.0) as int) + "% chance to inflict a random negative Potion Effect on the enemy when attacking.";
+val bonusDescriptionFull as string = "Malachite weapons have a " + ((debuffProcChance * 100.0) as int) + "% chance to inflict a random negative potion effect for " + debuffDurationSeconds + " seconds when attacking.";
 
 val material as string = "Malachite";
 
@@ -94,16 +93,11 @@ SB.addEquipToSet(armorSetName, "chest", chest);
 SB.addEquipToSet(armorSetName, "legs", legs);
 SB.addEquipToSet(armorSetName, "feet", feet);
 
-// Register weapons to their own set
 SB.addEquipToSet(weaponSetName, "mainhand", weapons);
 
-// 2 pieces of armor for partial
 SB.addSetReqToBonus(armorBonusNamePartial, bonusDescriptionPartial, armorSetName, 2);
-
-// 4 pieces of armor for full description display
 SB.addSetReqToBonus(armorBonusNameFull, bonusDescriptionFull, armorSetName, 4);
 
-// Intersection requirement: 4 armor + 1 weapon for the actual debuff proc
 SB.addSetReqToBonus(weaponBonusName, "", armorSetName, 4, 2);
 SB.addSetReqToBonus(weaponBonusName, "", weaponSetName, -1, 2);
 
@@ -120,25 +114,23 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         return;
     }
     
+    // ---------------------------------------------------------
     // ATTACKER LOGIC
+    // ---------------------------------------------------------
     if (attackerEntity instanceof IPlayer) {
         val attacker as IPlayer = attackerEntity.asIPlayer();
         
         if (!isNull(attacker)) {
             
-            // ---------------------------------------------------------
-            // Partial Set (2/4) - Target Effect Damage Scaling
-            // ---------------------------------------------------------
+            // --- Partial Set (2/4) ---
             if (attacker.hasSetBonus(armorBonusNamePartial) == true) {
                 
-                // Get all active potion effects on the TARGET
                 val activeEffects = targetEntity.activePotionEffects;
                 
                 if (!isNull(activeEffects)) {
                     val effectCount = activeEffects.length;
                     
                     if (effectCount > 0) {
-                        // Explicitly cast to double to prevent primitive coercion rounding bugs
                         val totalBonus as double = (effectCount as double) * damageBonusPerEffect;
                         
                         attacker.debugMessage(material + " Armor: +" + ((totalBonus * 100.0) as int) + "% damage from " + effectCount + " effects on target.");
@@ -147,9 +139,7 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
                 }
             }
             
-            // ---------------------------------------------------------
-            // Full Set (4/4 + Weapon Check) - Random Target Debuff
-            // ---------------------------------------------------------
+            // --- Full Set (4/4 + Weapon) ---
             if (attacker.hasSetBonus(weaponBonusName) == true) {
                 
                 if (event.amount > 0) {
@@ -158,17 +148,14 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
                         val rand = world.getRandom();
                         
                         if (!isNull(rand)) {
-                            // Roll the dice for the chance to apply
                             if (rand.nextFloat() <= debuffProcChance) {
                                 
-                                // Pick a random debuff from the array
                                 val debuffIndex = rand.nextInt(malachiteDebuffs.length);
                                 val chosenDebuff = malachiteDebuffs[debuffIndex];
                                 
-                                attacker.debugMessage(material + " Weapon: Inflicted " + chosenDebuff + " on target!");
+                                attacker.debugMessage(material + " Weapon: Inflicted " + chosenDebuff + "!");
                                 
-                                // Apply the debuff to the TARGET using your custom Java expansion
-                                targetEntity.applyPotionEffect(chosenDebuff, debuffDurationTicks, debuffAmplifier);
+                                targetEntity.applyPotionEffect(chosenDebuff, debuffDurationSeconds * 20, debuffAmplifier);
                             }
                         }
                     }

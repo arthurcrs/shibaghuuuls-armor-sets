@@ -11,20 +11,20 @@ import mods.mahzenutils.Stacks;
 // BALANCING
 // ==========================================
 
-// Partial Set (2/4) - Swiftness Charges
+// Partial Set (2/4)
 val outOfCombatSeconds as int = 5; 
 val maxCharges as int = 2;
-val speedBuffDurationTicks as int = 60; // 3 seconds of Haste V
+val speedBuffDurationSeconds as int = 3;
 val speedBuffAmplifier as int = 4; // Haste V
 
-// Full Set (4/4) - 3-Hit Combo
+// Full Set (4/4 + Weapon)
 val thirdHitBonusDamage as double = 1.0; // 100% bonus damage on the 3rd hit
 
 // ==========================================
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "After " + outOfCombatSeconds + " seconds of not dealing damage gain " + maxCharges + " Swiftness charges. Dealing damage consumes a charge to grant attack speed for your next strike.";
+val bonusDescriptionPartial as string = "Going " + outOfCombatSeconds + " seconds without dealing damage grants " + maxCharges + " Swiftness charges. Attacking consumes one charge to grant attack speed for your next strike.";
 
 val bonusDescriptionFull as string = "Iron and Steel weapons deal " + ((thirdHitBonusDamage * 100.0) as int) + "% bonus damage on every 3rd consecutive strike against the same enemy.";
 
@@ -108,27 +108,24 @@ SB.addSetReqToBonus(weaponBonusName, "", weaponSetName, -1, 2);
 // ==========================================
 
 Stacks.registerStack("chain_speed_charges", maxCharges, 0, "PERMANENT", "PRESERVE");
-// Register the combo tracker to apply to the enemies!
 Stacks.registerStack("chain_combo", 3, 0, "PERMANENT", "PRESERVE");
 
 // ==========================================
 // EVENTS
 // ==========================================
 
-// 1. PASSIVE TICK EVENT (For 2/4 Swiftness Charges)
+// 1. PASSIVE TICK EVENT
 events.onPlayerTick(function(event as PlayerTickEvent) {
     if (event.phase == "END" && event.player.world.time % 20 == 0) {
         val player = event.player;
         
         if (!isNull(player) && player.hasSetBonus(armorBonusNamePartial) == true) {
             
-            // Check if player is out of combat
             if (player.onCooldown("chain_combat_timer") == false) {
                 
                 val currentCharges = player.getStacks("chain_speed_charges");
                 
                 if (currentCharges < maxCharges) {
-                    // Safe addition without clearing
                     player.addStacks("chain_speed_charges", 1);
                     player.debugMessage(material + " Armor: Gained Swiftness charge (" + (currentCharges + 1) + "/" + maxCharges + ").");
                 }
@@ -155,7 +152,7 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         
         if (!isNull(attacker) && event.amount > 0) {
             
-            // --- Partial Set (2/4): Consume charge and lock out-of-combat timer ---
+            // --- Partial Set (2/4) ---
             if (attacker.hasSetBonus(armorBonusNamePartial) == true) {
                 
                 attacker.startCooldown("chain_combat_timer", outOfCombatSeconds * 20);
@@ -164,26 +161,23 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
                 if (currentCharges > 0) {
                     attacker.removeStacks("chain_speed_charges", 1);
                     
-                    attacker.applyPotionEffect("minecraft:haste", speedBuffDurationTicks, speedBuffAmplifier);
-                    attacker.debugMessage(material + " Armor: Charge consumed. Haste V applied. (" + (currentCharges - 1) + " remaining)");
+                    attacker.applyPotionEffect("minecraft:haste", speedBuffDurationSeconds * 20, speedBuffAmplifier);
+                    attacker.debugMessage(material + " Armor: Charge consumed. (" + (currentCharges - 1) + " remaining)");
                 }
             }
             
-            // --- Full Set (4/4 + Weapon): Target-Based Combo Logic ---
+            // --- Full Set (4/4 + Weapon) ---
             if (attacker.hasSetBonus(weaponBonusName) == true) {
                 
-                // Track the combo ON THE ENEMY!
                 targetEntity.addStacks("chain_combo", 1);
                 val currentCombo = targetEntity.getStacks("chain_combo");
                 
                 if (currentCombo >= 3) {
-                    // 3rd hit! Apply bonus damage
                     val totalBonus as double = thirdHitBonusDamage;
                     event.amount = event.amount * (1.0 + totalBonus);
                     
-                    attacker.debugMessage(material + " Weapon: 3rd Strike combo! +" + ((totalBonus * 100.0) as int) + "% damage!");
+                    attacker.debugMessage(material + " Weapon: +" + ((totalBonus * 100.0) as int) + "% damage!");
                     
-                    // Shatter the combo so it starts over on the next hit
                     targetEntity.clearStacks("chain_combo");
                     
                 } else {

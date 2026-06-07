@@ -14,16 +14,16 @@ import mods.mahzenutils.PlayerUtils;
 
 val mufflePotionId as string = "ebwizardry:muffle";
 
-// Full Set (4/4) - Assassination Strikes
+// Full Set (4/4)
 val assassinateBonusDamage as double = 2.0; 
-val assassinateCooldownTicks as int = 1200; 
-val killResetRadius as double = 6.0; // Any enemy dying within 6 blocks resets the cooldown
+val assassinateCooldownSeconds as int = 60; 
+val killResetRadius as double = 6.0;
 
 // ==========================================
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionFull as string = "While sneaking you gain the Muffle effect. Melee attacking an enemy while Muffled consumes the effect to deal " + ((assassinateBonusDamage * 100.0) as int) + "% bonus damage. This assassination strike has a " + (assassinateCooldownTicks / 20) + " second cooldown. If ANY enemy dies within " + killResetRadius + " blocks of you, this cooldown is instantly reset.";
+val bonusDescriptionFull as string = "Sneaking grants the Muffle effect. Melee attacking an enemy while Muffled consumes the effect to deal " + ((assassinateBonusDamage * 100.0) as int) + "% bonus damage. This effect has a " + assassinateCooldownSeconds + " second cooldown. An enemy dying within " + killResetRadius + " blocks of you instantly resets this cooldown.";
 
 val material as string = "Leather";
 
@@ -44,28 +44,23 @@ SB.addEquipToSet(armorSetName, "chest", chest);
 SB.addEquipToSet(armorSetName, "legs", legs);
 SB.addEquipToSet(armorSetName, "feet", feet);
 
-// Leather only has a 4-piece bonus, no weapon intersection required
 SB.addSetReqToBonus(armorBonusNameFull, bonusDescriptionFull, armorSetName, 4);
 
 // ==========================================
 // EVENTS
 // ==========================================
 
-// 1. PASSIVE TICK EVENT (Granting Muffle)
+// 1. PASSIVE TICK EVENT
 events.onPlayerTick(function(event as PlayerTickEvent) {
-    // Check twice a second to keep the script incredibly lightweight
     if (event.phase == "END" && event.player.world.time % 10 == 0) {
         val player = event.player;
         
         if (!isNull(player) && player.hasSetBonus(armorBonusNameFull) == true) {
             
-            // Check if sneaking using the standalone utility class
             if (PlayerUtils.isSneaking(player)) {
                 
-                // If the assassination strike is NOT on cooldown
                 if (player.onCooldown("leather_assassinate_cd") == false) {
                     
-                    // Apply Muffle for 1 second (20 ticks). It will continuously refresh as long as they sneak.
                     player.applyPotionEffect(mufflePotionId, 20, 0);
                 }
             }
@@ -73,7 +68,7 @@ events.onPlayerTick(function(event as PlayerTickEvent) {
     }
 });
 
-// 2. COMBAT EVENT (Consuming Muffle for Bonus Damage)
+// 2. COMBAT EVENT
 events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
     val damageSource as IDamageSource = event.damageSource;
     val attackerEntity as IEntity = damageSource.getTrueSource();
@@ -83,7 +78,6 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         return;
     }
     
-    // STRICT FILTER: Only trigger on direct melee attacks
     if (damageSource.damageType != "player") {
         return;
     }
@@ -98,34 +92,29 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
             
             if (attacker.hasSetBonus(armorBonusNameFull) == true) {
                 
-                // Check if the player currently has the Muffle effect active
                 val muffleAmp = attacker.getPotionAmplifier(mufflePotionId);
                 
                 if (muffleAmp >= 0) {
                     
-                    // 1. Apply the massive backstab bonus damage
                     event.amount = event.amount * (1.0 + assassinateBonusDamage);
                     
-                    // 2. Strip the Muffle effect using native CraftTweaker bracket handlers
                     attacker.removePotionEffect(<potion:ebwizardry:muffle>);
                     
-                    // 3. Trigger the Cooldown
-                    attacker.startCooldown("leather_assassinate_cd", assassinateCooldownTicks);
+                    attacker.startCooldown("leather_assassinate_cd", assassinateCooldownSeconds * 20);
                     
-                    attacker.debugMessage(material + " Armor: Assassination Strike! +" + ((assassinateBonusDamage * 100.0) as int) + "% Damage!");
+                    attacker.debugMessage(material + " Armor: +" + ((assassinateBonusDamage * 100.0) as int) + "% Damage!");
                 }
             }
         }
     }
 });
 
-// 3. DEATH EVENT (Resetting Cooldown on Close-Range Kills)
+// 3. DEATH EVENT
 events.onEntityLivingDeath(function(event as EntityLivingDeathEvent) {
     val deadEntity = event.entityLivingBase;
     
     if (!isNull(deadEntity)) {
         
-        // Grab all players within the kill radius using your backend method
         val nearbyPlayers = deadEntity.getNearbyPlayers(killResetRadius);
         
         if (!isNull(nearbyPlayers)) {
@@ -134,12 +123,10 @@ events.onEntityLivingDeath(function(event as EntityLivingDeathEvent) {
                     
                     if (player.hasSetBonus(armorBonusNameFull) == true) {
                         
-                        // If the player is currently waiting on their assassination cooldown
                         if (player.onCooldown("leather_assassinate_cd")) {
                             
-                            // Setting the cooldown to 0 instantly expires it
                             player.startCooldown("leather_assassinate_cd", 0);
-                            player.debugMessage(material + " Armor: Enemy killed at close range! Assassination cooldown reset!");
+                            player.debugMessage(material + " Armor: Cooldown reset!");
                         }
                     }
                 }

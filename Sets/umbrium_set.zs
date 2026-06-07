@@ -14,14 +14,14 @@ import mods.mahzenutils.Stacks;
 val umbriumStackId as string = "umbrium_doom_stacks";
 val doomTimerId as string = "umbrium_doom_timer";
 
-// Partial Set (2/4) - Executioner
+// Partial Set (2/4)
 val executionHealthThreshold as double = 0.50; // 50% Health
 val executionBonusDamage as double = 0.50; // 50% Bonus Damage
 
-// Full Set (4/4 + Weapon) - Impending Doom
+// Full Set (4/4 + Weapon)
 val damageToStackMultiplier as double = 1.0; // 1 Damage = 1 Stack
 val doomExplosionMultiplier as double = 0.50; 
-val doomDelayTicks as int = 60; // 3 Seconds without taking damage to trigger the explosion
+val doomDelaySeconds as int = 3; // 3 Seconds without taking damage to trigger the explosion
 
 // ==========================================
 // DEFINITION
@@ -29,7 +29,7 @@ val doomDelayTicks as int = 60; // 3 Seconds without taking damage to trigger th
 
 val bonusDescriptionPartial as string = "Deals " + ((executionBonusDamage * 100.0) as int) + "% bonus damage to enemies that are below " + ((executionHealthThreshold * 100.0) as int) + "% maximum health.";
 
-val bonusDescriptionFull as string = "Umbrium weapons stack Impending Doom based on damage dealt. Waiting " + (doomDelayTicks / 20) + " seconds triggers a detonation dealing " + ((doomExplosionMultiplier * 100.0) as int) + "% of the accumulated damage.";
+val bonusDescriptionFull as string = "Umbrium weapons stack Impending Doom based on damage dealt. Waiting " + doomDelaySeconds + " seconds triggers a detonation dealing " + ((doomExplosionMultiplier * 100.0) as int) + "% of the accumulated damage.";
 
 val material as string = "Umbrium";
 
@@ -94,18 +94,16 @@ SB.addSetReqToBonus(weaponBonusName, "", weaponSetName, -1, 2);
 // STACK REGISTRY
 // ==========================================
 
-// Extremely high cap since it stores a 1:1 ratio of damage points
 Stacks.registerStack(umbriumStackId, 99999, 0, "PERMANENT", "PRESERVE");
 
 // ==========================================
 // EVENTS
 // ==========================================
 
-// 1. COMBAT EVENT (Applying Stacks & Executioner)
+// 1. COMBAT EVENT
 events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
     val damageSource as IDamageSource = event.damageSource;
     
-    // Prevent the detonation burst from triggering infinite loops
     if (damageSource.damageType == "umbrium_burst") {
         return;
     }
@@ -117,11 +115,9 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         return; 
     }
     
-    // --- RESET DOOM TIMER ON ANY HIT ---
-    // If an enemy has doom stacks, ANY incoming damage resets the countdown timer.
     val currentDoomStacks = targetEntity.getStacks(umbriumStackId);
     if (currentDoomStacks > 0) {
-        targetEntity.startCooldown(doomTimerId, doomDelayTicks);
+        targetEntity.startCooldown(doomTimerId, doomDelaySeconds * 20);
     }
     
     // ---------------------------------------------------------
@@ -132,18 +128,18 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         
         if (!isNull(attacker) && event.amount > 0) {
             
-            // --- Partial Set (2/4): Executioner ---
+            // --- Partial Set (2/4) ---
             if (attacker.hasSetBonus(armorBonusNamePartial) == true) {
                 
                 val currentHealthRatio = (targetEntity.health as double) / (targetEntity.maxHealth as double);
                 
                 if (currentHealthRatio <= executionHealthThreshold) {
                     event.amount = event.amount * (1.0 + executionBonusDamage);
-                    attacker.debugMessage(material + " Armor: Executioner Bonus! +" + ((executionBonusDamage * 100.0) as int) + "% Damage!");
+                    attacker.debugMessage(material + " Armor: +" + ((executionBonusDamage * 100.0) as int) + "% Damage!");
                 }
             }
             
-            // --- Full Set (4/4 + Weapon): Impending Doom ---
+            // --- Full Set (4/4 + Weapon) ---
             if (attacker.hasSetBonus(weaponBonusName) == true) {
                 
                 val stacksToAdd = (event.amount * damageToStackMultiplier) as int;
@@ -151,19 +147,17 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
                 if (stacksToAdd > 0) {
                     targetEntity.addStacks(umbriumStackId, stacksToAdd);
                     
-                    // Start/Refresh the detonation countdown on the target
-                    targetEntity.startCooldown(doomTimerId, doomDelayTicks);
+                    targetEntity.startCooldown(doomTimerId, doomDelaySeconds * 20);
                     
-                    attacker.debugMessage(material + " Weapon: Inflicted " + stacksToAdd + " Impending Doom stacks!");
+                    attacker.debugMessage(material + " Weapon: Inflicted " + stacksToAdd + " stacks!");
                 }
             }
         }
     }
 });
 
-// 2. PASSIVE TARGET TICK (Detonating the Stacks)
+// 2. PASSIVE TARGET TICK
 events.onEntityLivingUpdate(function(event as EntityLivingUpdateEvent) {
-    // Only process this check twice a second to preserve server performance
     if (event.entityLivingBase.world.time % 10 == 0) {
         
         val targetEntity = event.entityLivingBase;
@@ -172,17 +166,12 @@ events.onEntityLivingUpdate(function(event as EntityLivingUpdateEvent) {
             
             val stacks = targetEntity.getStacks(umbriumStackId);
             
-            // If the entity has stacks, but the countdown timer has expired
             if (stacks > 0 && targetEntity.onCooldown(doomTimerId) == false) {
                 
-                // Cast to float right before application
                 val burstDamage as float = (stacks as float) * (doomExplosionMultiplier as float);
                 
-                // Clear the stacks immediately so it doesn't multi-detonate
                 targetEntity.clearStacks(umbriumStackId);
                 
-                // Deal the damage to the entity. 
-                // We pass the entity itself as the 'attacker' to prevent null crashes in the backend!
                 targetEntity.dealCustomDamage(targetEntity as IEntity, burstDamage, "umbrium_burst");
             }
         }

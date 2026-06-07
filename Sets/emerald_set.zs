@@ -9,15 +9,14 @@ import crafttweaker.event.EntityLivingHurtEvent;
 // BALANCING
 // ==========================================
 
-// Partial Set (2/4) - Potion Damage Scaling
+// Partial Set (2/4)
 val damageBonusPerPotion as double = 0.05;
 
-// Full Set (4/4) - Random Self-Buffs
+// Full Set (4/4 + Weapon)
 val buffProcChance as double = 0.20;
-val buffDurationTicks as int = 200;
+val buffDurationSeconds as int = 10;
 val buffAmplifier as int = 0;        // Level 1 (0 = I, 1 = II)
 
-// The pool of possible buffs (Vanilla + Potion Core)
 val emeraldBuffs as string[] = [
     "minecraft:speed",
     "minecraft:haste",
@@ -46,7 +45,7 @@ val emeraldBuffs as string[] = [
 
 val bonusDescriptionPartial as string = "Deal " + ((damageBonusPerPotion * 100.0) as int) + "% bonus damage for every active potion effect you have.";
 
-val bonusDescriptionFull as string = "Emerald weapons have a " + ((buffProcChance * 100.0) as int) + "% chance to grant a random positive Potion Effect when attacking.";
+val bonusDescriptionFull as string = "Emerald weapons have a " + ((buffProcChance * 100.0) as int) + "% chance to grant a random positive potion effect for " + buffDurationSeconds + " seconds when attacking.";
 
 val material as string = "Emerald";
 
@@ -95,16 +94,11 @@ SB.addEquipToSet(armorSetName, "chest", chest);
 SB.addEquipToSet(armorSetName, "legs", legs);
 SB.addEquipToSet(armorSetName, "feet", feet);
 
-// Register weapons to their own set
 SB.addEquipToSet(weaponSetName, "mainhand", weapons);
 
-// 2 pieces of armor for partial
 SB.addSetReqToBonus(armorBonusNamePartial, bonusDescriptionPartial, armorSetName, 2);
-
-// 4 pieces of armor for full description display
 SB.addSetReqToBonus(armorBonusNameFull, bonusDescriptionFull, armorSetName, 4);
 
-// Intersection requirement: 4 armor + 1 weapon for the actual random buff proc
 SB.addSetReqToBonus(weaponBonusName, "", armorSetName, 4, 2);
 SB.addSetReqToBonus(weaponBonusName, "", weaponSetName, -1, 2);
 
@@ -121,18 +115,17 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         return;
     }
     
+    // ---------------------------------------------------------
     // ATTACKER LOGIC
+    // ---------------------------------------------------------
     if (attackerEntity instanceof IPlayer) {
         val attacker as IPlayer = attackerEntity.asIPlayer();
         
         if (!isNull(attacker)) {
             
-            // ---------------------------------------------------------
-            // Partial Set (2/4) - Infinite Potion Damage Scaling
-            // ---------------------------------------------------------
+            // --- Partial Set (2/4) ---
             if (attacker.hasSetBonus(armorBonusNamePartial) == true) {
                 
-                // Get all active potion effects on the attacker
                 val activeEffects = attacker.activePotionEffects;
                 
                 if (!isNull(activeEffects)) {
@@ -147,9 +140,7 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
                 }
             }
             
-            // ---------------------------------------------------------
-            // Full Set (4/4 + Weapon Check) - Random Self Buff
-            // ---------------------------------------------------------
+            // --- Full Set (4/4 + Weapon) ---
             if (attacker.hasSetBonus(weaponBonusName) == true) {
                 
                 if (event.amount > 0) {
@@ -159,15 +150,13 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
                         val rand = world.getRandom();
                         
                         if (!isNull(rand)) {
-                            // Roll the dice for the 20% chance
                             if (rand.nextFloat() <= buffProcChance) {
                                 
-                                // Pick a random buff from the array
                                 val buffIndex = rand.nextInt(emeraldBuffs.length);
                                 val chosenBuff = emeraldBuffs[buffIndex];
                                 
                                 attacker.debugMessage(material + " Weapon: Granted " + chosenBuff + " buff!");
-                                attacker.applyPotionEffect(chosenBuff, buffDurationTicks, buffAmplifier);
+                                attacker.applyPotionEffect(chosenBuff, buffDurationSeconds * 20, buffAmplifier);
                             }
                         }
                     }

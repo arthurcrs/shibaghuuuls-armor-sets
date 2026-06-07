@@ -12,20 +12,20 @@ import crafttweaker.event.EntityLivingHurtEvent;
 // ==========================================
 
 // Partial Set (2/4)
-val healthThresholdPercent as double = 0.5; // Triggers when at or below
-val diamondSkinDurationTicks as int = 200;
-val diamondSkinAmplifier as int = 2; // Diamond Skin II each level is 4 points
+val healthThresholdPercent as double = 0.50; // Triggers when at or below
+val diamondSkinDurationSeconds as int = 10;
+val diamondSkinAmplifier as int = 2; // Diamond Skin II
 val cooldownName as string = "Diamond Armor Cooldown";
 val cooldownSeconds as int = 60;
 
-// Full Set + Weapon
+// Full Set (4/4 + Weapon)
 val percentDamageBonusPerToughness as double = 0.02;
 
 // ==========================================
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "When health drops below 50% gain Diamond Skin for " + (diamondSkinDurationTicks/20) + " seconds. Cooldown: " + cooldownSeconds + "s.";
+val bonusDescriptionPartial as string = "Dropping below " + ((healthThresholdPercent * 100.0) as int) + "% health grants Diamond Skin for " + diamondSkinDurationSeconds + " seconds. This effect has a " + cooldownSeconds + " second cooldown.";
 
 val bonusDescriptionFull as string = "Diamond weapons deal " + ((percentDamageBonusPerToughness * 100.0) as int) + "% bonus damage for every point of Armor Toughness you possess.";
 
@@ -83,11 +83,9 @@ SB.addEquipToSet(armorSetName, "feet", feet);
 
 SB.addEquipToSet(weaponSetName, "mainhand", weapons);
 
-// 2 pieces of armor for partial
 SB.addSetReqToBonus(armorBonusNamePartial, bonusDescriptionPartial, armorSetName, 2);
-// 4 pieces of armor for full description
-SB.addSetReqToBonus(armorBonusNameFull, bonusDescriptionFull, armorSetName);
-// 4 pieces of armor + 1 weapon for weapon bonus
+SB.addSetReqToBonus(armorBonusNameFull, bonusDescriptionFull, armorSetName, 4);
+
 SB.addSetReqToBonus(weaponBonusName, "", armorSetName, 4, 2);
 SB.addSetReqToBonus(weaponBonusName, "", weaponSetName, -1, 2);
 
@@ -101,41 +99,40 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
     val targetEntity as IEntityLivingBase = event.entityLivingBase;
 
     // ---------------------------------------------------------
-    // DEFENDER LOGIC: Partial Set (2/4) - Diamond Skin Proc
+    // DEFENDER LOGIC
     // ---------------------------------------------------------
     if (!isNull(targetEntity) && targetEntity instanceof IPlayer) {
         val defender as IPlayer = targetEntity.asIPlayer();
 
         if (defender.hasSetBonus(armorBonusNamePartial) == true) {
-            // Check health threshold
+            
             if (defender.getHealthPercentage() <= healthThresholdPercent) {
-                // Check cooldown
+                
                 if (defender.onCooldown(cooldownName) == false) {
-                    defender.debugMessage(material + " Armor: Critical health! Hardening skin.");
+                    defender.debugMessage(material + " Armor: Hardening skin.");
                     defender.startCooldown(cooldownName, cooldownSeconds * 20);
-                    defender.applyPotionEffect("potioncore:diamond_skin", diamondSkinDurationTicks, diamondSkinAmplifier);
+                    defender.applyPotionEffect("potioncore:diamond_skin", diamondSkinDurationSeconds * 20, diamondSkinAmplifier);
                 }
             }
         }
     }
 
     // ---------------------------------------------------------
-    // ATTACKER LOGIC: Full Set (4/4 + Weapon) - Toughness Scaling
+    // ATTACKER LOGIC
     // ---------------------------------------------------------
     if (!isNull(attackerEntity) && attackerEntity instanceof IPlayer) {
         val attacker as IPlayer = attackerEntity.asIPlayer();
 
         if (attacker.hasSetBonus(weaponBonusName) == true) {
-            // Fetch current armor toughness
+            
             val currentToughness = attacker.getAttributeValue("generic.armorToughness", 0.0);
 
             if (currentToughness > 0.0) {
-                // Calculate percentage increase
+                
                 val percentageIncrease = currentToughness * percentDamageBonusPerToughness;
 
                 attacker.debugMessage(material + " Weapon: +" + ((percentageIncrease * 100.0) as int) + "% damage from " + currentToughness + " Armor Toughness");
 
-                // Apply bonus damage
                 event.amount = event.amount * (1.0 + percentageIncrease);
             }
         }
