@@ -41,8 +41,8 @@ val feet as string = "deeperdepths:copper_boots";
 
 // Ice and Fire + Spartan Weaponry
 val weapons as string[] = [
-    "iceandfire:copper_sword",
-    "iceandfire:copper_axe",
+    "deeperdepths:copper_sword",
+    "deeperdepths:copper_axe",
     "spartanweaponry:dagger_copper",
     "spartanweaponry:longsword_copper",
     "spartanweaponry:katana_copper",
