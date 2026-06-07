@@ -20,15 +20,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare zip structure
+      - name: Create zip from Sets contents
         run: |
-          mkdir -p build/scripts
-          cp -r Sets build/scripts/Sets
-
-      - name: Create zip
-        run: |
-          cd build
-          zip -r ../sets-update.zip scripts
+          cd Sets
+          zip -r ../sets-update.zip .
 
       - name: Create or update latest release
         env:
