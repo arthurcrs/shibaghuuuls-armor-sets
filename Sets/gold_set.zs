@@ -23,7 +23,7 @@ val damageBonusPerAbsorptionPoint as double = 0.05; // 5% bonus damage per point
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "Gain 4 Absorption health points for every " + passiveRegenSeconds + " seconds you do not take damage up to a maximum of " + ((maxAbsorptionLevel + 1) * 4) + " points. Taking damage halts regeneration for " + combatPauseSeconds + " seconds.";
+val bonusDescriptionPartial as string = "Gain 4 absorption health points for every " + passiveRegenSeconds + " seconds you do not take damage up to a maximum of " + ((maxAbsorptionLevel + 1) * 4) + " points. Taking damage halts regeneration for " + combatPauseSeconds + " seconds.";
 
 val bonusDescriptionFull as string = "Gold weapons deal " + ((damageBonusPerAbsorptionPoint * 100.0) as int) + "% bonus damage for every point of Absorption health you currently possess.";
 
