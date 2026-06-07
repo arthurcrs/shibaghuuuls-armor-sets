@@ -25,7 +25,7 @@ val shieldMitigationPercentage as double = 0.60;
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "While actively blocking with a shield " + ((redirectedDamagePercentage * 100.0) as int) + "% of damage taken by players within " + redirectRadius + " blocks is redirected to you. This intercepted damage is reduced by " + ((blockingMitigationPercentage * 100.0) as int) + "%.";
+val bonusDescriptionPartial as string = "While actively blocking with a shield " + ((redirectedDamagePercentage * 100.0) as int) + "% of damage taken by players within " + redirectRadius + " blocks is redirected to you. This damage is reduced by " + ((blockingMitigationPercentage * 100.0) as int) + "%.";
 
 val bonusDescriptionFull as string = "Topaz weapons convert " + ((damageToStackConversion * 100.0) as int) + "% of damage dealt into Topaz Stacks. When taking damage Topaz Stacks absorb up to " + ((shieldMitigationPercentage * 100.0) as int) + "% of the hit.";
 

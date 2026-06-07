@@ -29,7 +29,7 @@ val recoilPercentage as double = 0.15; // 15% of damage dealt is taken as recoil
 
 val bonusDescriptionPartial as string = "While below " + ((healthThreshold * 100.0) as int) + "% health gain 1 stack of Fury every second (Max " + maxCopperStacks + "). Each stack grants " + ((mitigationPerStack * 100.0) as int) + "% damage reduction and " + ((damageBoostPerStack * 100.0) as int) + "% bonus damage. Healing above the threshold removes 1 stack per second.";
 
-val bonusDescriptionFull as string = "Copper weapons deal " + ((flatWeaponBonus * 100.0) as int) + "% bonus damage. If your health is above " + ((healthThreshold * 100.0) as int) + "% attacking drains your life force dealing recoil damage equal to " + ((recoilPercentage * 100.0) as int) + "% of your damage dealt. This recoil cannot drop you below the health threshold.";
+val bonusDescriptionFull as string = "Copper weapons deal " + ((flatWeaponBonus * 100.0) as int) + "% bonus damage. If your health is above " + ((healthThreshold * 100.0) as int) + "% you lose health equal to " + ((recoilPercentage * 100.0) as int) + "% of your damage dealt. This cannot drop you below the health threshold.";
 
 val material as string = "Copper";
 

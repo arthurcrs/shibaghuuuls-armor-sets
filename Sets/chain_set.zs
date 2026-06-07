@@ -24,7 +24,7 @@ val thirdHitBonusDamage as double = 1.0; // 100% bonus damage on the 3rd hit
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "After " + outOfCombatSeconds + " seconds of not dealing damage gain " + maxCharges + " Swiftness charges. Dealing damage consumes a charge to grant immense Attack Speed for your next strike.";
+val bonusDescriptionPartial as string = "After " + outOfCombatSeconds + " seconds of not dealing damage gain " + maxCharges + " Swiftness charges. Dealing damage consumes a charge to grant attack speed for your next strike.";
 
 val bonusDescriptionFull as string = "Iron and Steel weapons deal " + ((thirdHitBonusDamage * 100.0) as int) + "% bonus damage on every 3rd consecutive strike against the same enemy.";
 

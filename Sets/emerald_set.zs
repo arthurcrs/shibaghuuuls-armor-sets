@@ -44,7 +44,7 @@ val emeraldBuffs as string[] = [
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "Deal " + ((damageBonusPerPotion * 100.0) as int) + "% bonus damage for EVERY active potion effect you have.";
+val bonusDescriptionPartial as string = "Deal " + ((damageBonusPerPotion * 100.0) as int) + "% bonus damage for every active potion effect you have.";
 
 val bonusDescriptionFull as string = "Emerald weapons have a " + ((buffProcChance * 100.0) as int) + "% chance to grant a random positive Potion Effect when attacking.";
 

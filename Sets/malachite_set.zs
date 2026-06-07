@@ -43,7 +43,7 @@ val malachiteDebuffs as string[] = [
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "Deal " + ((damageBonusPerEffect * 100.0) as int) + "% bonus damage for EVERY active potion effect on your target.";
+val bonusDescriptionPartial as string = "Deal " + ((damageBonusPerEffect * 100.0) as int) + "% bonus damage for every active potion effect on your target.";
 
 val bonusDescriptionFull as string = "Malachite weapons have a " + ((debuffProcChance * 100.0) as int) + "% chance to inflict a random negative Potion Effect on the enemy when attacking.";
 

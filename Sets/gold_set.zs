@@ -12,20 +12,20 @@ import crafttweaker.event.PlayerTickEvent;
 
 // Partial Set (2/4) - Passive Absorption
 val passiveRegenSeconds as int = 5; 
-val combatPauseTicks as int = 1200; // 60 seconds (1200 ticks) pause on regen after taking damage
-val maxAbsorptionLevel as int = 3;  // Level 3 is "Absorption IV"
-val absorptionDurationTicks as int = 2400; 
+val combatPauseSeconds as int = 60; // Pause on regen after taking damage
+val maxAbsorptionLevel as int = 3;  // Level 3 is "Absorption IV" (16 Health Points)
+val absorptionDurationSeconds as int = 120; // How long the absorption lasts natively
 
 // Full Set (4/4) - Exact Absorption Scaling
-val damageBonusPerAbsorptionPoint as double = 0.05; // Bonus damage per point
+val damageBonusPerAbsorptionPoint as double = 0.05; // 5% bonus damage per point
 
 // ==========================================
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "Gain 1 level of Absorption for every " + passiveRegenSeconds + " seconds you do not take damage (Max Level " + (maxAbsorptionLevel + 1) + "). Taking damage halts regeneration for 60 seconds.";
+val bonusDescriptionPartial as string = "Gain 4 Absorption health points for every " + passiveRegenSeconds + " seconds you do not take damage up to a maximum of " + ((maxAbsorptionLevel + 1) * 4) + " points. Taking damage halts regeneration for " + combatPauseSeconds + " seconds.";
 
-val bonusDescriptionFull as string = "Gold weapons deal bonus damage scaling directly with the exact amount of Absorption health you currently possess.";
+val bonusDescriptionFull as string = "Gold weapons deal " + ((damageBonusPerAbsorptionPoint * 100.0) as int) + "% bonus damage for every point of Absorption health you currently possess.";
 
 val material as string = "Gold";
 
@@ -116,7 +116,7 @@ events.onPlayerTick(function(event as PlayerTickEvent) {
                         nextAmp = maxAbsorptionLevel;
                     }
                     
-                    player.applyPotionEffect("minecraft:absorption", absorptionDurationTicks, nextAmp);
+                    player.applyPotionEffect("minecraft:absorption", absorptionDurationSeconds * 20, nextAmp);
                     
                     if (currentAmp < maxAbsorptionLevel) {
                         player.debugMessage(material + " Armor: Gained Absorption Level " + (nextAmp + 1));
@@ -147,10 +147,10 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         
         if (!isNull(defender)) {
             if (defender.hasSetBonus(armorBonusNamePartial) == true) {
-                defender.startCooldown("gold_combat_pause", combatPauseTicks);
+                defender.startCooldown("gold_combat_pause", combatPauseSeconds * 20);
                 defender.startCooldown("gold_regen_tick", passiveRegenSeconds * 20);
                 
-                defender.debugMessage(material + " Armor: Regeneration paused for " + (combatPauseTicks / 20) + " seconds.");
+                defender.debugMessage(material + " Armor: Regeneration paused for " + combatPauseSeconds + " seconds.");
             }
         }
     }

@@ -29,7 +29,7 @@ val doomDelayTicks as int = 60; // 3 Seconds without taking damage to trigger th
 
 val bonusDescriptionPartial as string = "Deals " + ((executionBonusDamage * 100.0) as int) + "% bonus damage to enemies that are below " + ((executionHealthThreshold * 100.0) as int) + "% maximum health.";
 
-val bonusDescriptionFull as string = "Umbrium weapons inflict Impending Doom stacks based on damage dealt. If an afflicted enemy does not take damage for " + (doomDelayTicks / 20) + " seconds, the stacks detonate, dealing " + ((doomExplosionMultiplier * 100.0) as int) + "% of the accumulated damage as a massive burst.";
+val bonusDescriptionFull as string = "Umbrium weapons stack Impending Doom based on damage dealt. Waiting " + (doomDelayTicks / 20) + " seconds triggers a detonation dealing " + ((doomExplosionMultiplier * 100.0) as int) + "% of the accumulated damage.";
 
 val material as string = "Umbrium";
 

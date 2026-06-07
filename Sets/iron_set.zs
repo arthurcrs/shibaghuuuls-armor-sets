@@ -11,21 +11,21 @@ import crafttweaker.event.EntityLivingHurtEvent;
 // BALANCING
 // ==========================================
 
-// Partial Set
-val waitTimeSeconds as int = 3;
-val percentDamageBonusForWaiting as double = 0.75; 
-val cooldownName as string = "Wait Time Cooldown";
+// Partial Set (2/4)
+val fullHealthPercentDamageBonus as double = 0.75; // 75% Bonus
 
-// Weapon Bonus
-val fullHealthPercentDamageBonus as double = 0.75;
+// Full Set (4/4 + Weapon)
+val waitTimeSeconds as int = 3;
+val percentDamageBonusForWaiting as double = 0.75; // 75% Bonus
+val cooldownName as string = "Wait Time Cooldown";
 
 // ==========================================
 // DEFINITION
 // ==========================================
 
-val bonusDescriptionPartial as string = "After not dealing damage for " + waitTimeSeconds + " seconds, the next melee attack will deal " + ((percentDamageBonusForWaiting * 100.0) as int) + "% bonus damage.";
+val bonusDescriptionPartial as string = "Your attacks deal " + ((fullHealthPercentDamageBonus * 100.0) as int) + "% bonus damage to enemies at maximum health.";
 
-val bonusDescriptionFull as string = "Iron and steel weapons deal " + ((fullHealthPercentDamageBonus * 100.0) as int) + "% bonus damage to enemies with full health.";
+val bonusDescriptionFull as string = "Waiting " + waitTimeSeconds + " seconds without attacking grants " + ((percentDamageBonusForWaiting * 100.0) as int) + "% bonus damage to your next Iron or Steel melee attack.";
 
 val material as string = "Iron";
 
@@ -137,33 +137,33 @@ events.onEntityLivingHurt(function(event as EntityLivingHurtEvent) {
         if (isNull(attacker) == false) {
             
             // ---------------------------------------------------------
-            // Partial Set (2/4) - Patient Strike
+            // Partial Set (2/4)
             // ---------------------------------------------------------
             if (attacker.hasSetBonus(armorBonusNamePartial) == true) {
+                
+                // Check if target is at exactly maximum health
+                if (!isNull(targetEntity) && targetEntity.health == targetEntity.maxHealth) {
+                    attacker.debugMessage(material + " Armor: Target at full health! Execution damage applied.");
+                    event.amount = event.amount * (1.0 + fullHealthPercentDamageBonus);
+                }
+            }
+            
+            // ---------------------------------------------------------
+            // Full Set (4/4 + Weapon)
+            // ---------------------------------------------------------
+            if (attacker.hasSetBonus(weaponBonusName) == true) {
                 
                 // Only trigger on melee attacks
                 if (damageSource.isProjectile() == false) {
                     
                     // If the cooldown is completely finished, apply the massive damage bonus
                     if (attacker.onCooldown(cooldownName) == false) {
-                        attacker.debugMessage(material + " Armor: Cooldown finished! Bonus damage applied.");
+                        attacker.debugMessage(material + " Weapon: Cooldown finished! Bonus damage applied.");
                         event.amount = event.amount * (1.0 + percentDamageBonusForWaiting);
                     }
 
                     // Regardless of whether they got the bonus or not, hitting someone resets the timer
                     attacker.startCooldown(cooldownName, waitTimeSeconds * 20);
-                }
-            }
-            
-            // ---------------------------------------------------------
-            // Full Set (4/4 + Weapon) - Full Health Executioner
-            // ---------------------------------------------------------
-            if (attacker.hasSetBonus(weaponBonusName) == true) {
-                
-                // Check if target is at exactly maximum health
-                if (!isNull(targetEntity) && targetEntity.health == targetEntity.maxHealth) {
-                    attacker.debugMessage(material + " Weapon: Target at full health! Execution damage applied.");
-                    event.amount = event.amount * (1.0 + fullHealthPercentDamageBonus);
                 }
             }
         }
