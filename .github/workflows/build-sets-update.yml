@@ -1,0 +1,41 @@
+name: Build sets update zip
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Sets/**'
+      - '.github/workflows/build-sets-update.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-zip:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare zip structure
+        run: |
+          mkdir -p build/scripts
+          cp -r Sets build/scripts/Sets
+
+      - name: Create zip
+        run: |
+          cd build
+          zip -r ../sets-update.zip scripts
+
+      - name: Create or update latest release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete latest --yes || true
+          git push origin :refs/tags/latest || true
+          gh release create latest sets-update.zip \
+            --title "Latest armor sets update" \
+            --notes "Automatically generated from latest Sets folder"
