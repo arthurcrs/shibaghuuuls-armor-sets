@@ -11,17 +11,17 @@ import mods.mahzenutils.Stacks; // <-- YOUR CUSTOM MOD IMPORT
 // BALANCING
 // ==========================================
 
-val healthThreshold as double = 0.50; // 50% health threshold for both bonuses
+val healthThreshold as double = 0.50;
 val copperStackId as string = "copper_fury_stacks";
 
-// Partial Set (2/4) - Berserker Stacks
+// Partial Set (2/4)
 val maxCopperStacks as int = 10;
-val mitigationPerStack as double = 0.02; // 2% less damage taken per stack (20% Max)
-val damageBoostPerStack as double = 0.03; // 3% more damage dealt per stack (30% Max)
+val mitigationPerStack as double = 0.06;
+val damageBoostPerStack as double = 0.05; 
 
-// Full Set (4/4 + Weapon) - Overclocked Strikes
-val flatWeaponBonus as double = 0.25; // 25% flat damage boost for using Copper
-val recoilPercentage as double = 0.15; // 15% of damage dealt is taken as recoil when above 50% health
+// Full Set (4/4 + Weapon)
+val flatWeaponBonus as double = 0.25;
+val recoilPercentage as double = 0.15;
 
 // ==========================================
 // DEFINITION
