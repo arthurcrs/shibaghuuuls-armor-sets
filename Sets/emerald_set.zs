@@ -13,8 +13,8 @@ import crafttweaker.event.EntityLivingHurtEvent;
 val damageBonusPerPotion as double = 0.05;
 
 // Full Set (4/4 + Weapon)
-val buffProcChance as double = 0.20;
-val buffDurationSeconds as int = 10;
+val buffProcChance as double = 0.25;
+val buffDurationSeconds as int = 60;
 val buffAmplifier as int = 0;        // Level 1 (0 = I, 1 = II)
 
 val emeraldBuffs as string[] = [
